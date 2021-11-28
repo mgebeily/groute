@@ -1,7 +1,7 @@
 {
   "name": "groute",
   "author": "Marc Gebeily",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A tiny client side router (and associated custom elements)",
   "license": "MIT",
   "main": "./dist/index.js",
