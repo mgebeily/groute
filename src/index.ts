@@ -1,15 +1,15 @@
 export type Route = {
   path: string;
   children?: Route[];
-  canActivate: (params: Params) => boolean;
-  onActivate: (params: Params) => boolean | null;
-  matchOutlet: string,
-  matchContent: string | HTMLElement;
+  canActivate?: (params: Params) => boolean;
+  onActivate?: (params: Params) => boolean | null;
+  outlet?: string,
+  content?: string | HTMLElement;
 };
 
 export type Routes = Route[];
 export type Params = { [key:string]: string };
-export type RouteMatch = { route: Route, params: Params, leftToMatch: string[] }
+export type RouteMatch = { route: Route, params: Params, leftToMatch?: string[] }
 export type PathMatch = RouteMatch[];
 
 const routeMatched = (chunksToMatch: string[]) => (route: Route): RouteMatch | null => {
@@ -99,7 +99,7 @@ const onNavigate = (routes: Routes, root = document.body, basePath = '') => {
       route.onActivate(params)
     }
 
-    const content = route.matchContent;
+    const content = route.content;
     if (content instanceof HTMLElement) {
       // TODO: Is this correct?
       currentOutlet.innerHTML = content.outerHTML;
@@ -107,8 +107,8 @@ const onNavigate = (routes: Routes, root = document.body, basePath = '') => {
       currentOutlet.innerHTML = content
     }
 
-    if (route.matchOutlet) {
-      currentOutlet = currentOutlet.querySelector(route.matchOutlet)
+    if (route.outlet) {
+      currentOutlet = currentOutlet.querySelector(route.outlet)
     }
     // TODO: Warn if there is no match outlet
   }

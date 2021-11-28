@@ -1,13 +1,11 @@
 {
   "name": "groute",
   "author": "Marc Gebeily",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A tiny client side router (and associated custom elements)",
-  "main": "index.js",
   "license": "MIT",
-  "exports": {
-    ".": "./dist"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "prepare": "tsc",
     "start": "watchexec -i dist yarn build",

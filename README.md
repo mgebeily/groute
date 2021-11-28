@@ -15,35 +15,35 @@ or
 import { groute } from 'groute';
 
 groute([{
-	path: '/',
-	onActivate: () => {
-		console.log("The current URL is (or starts with) '/'");
-	},
-	matchContent: `
-		<h1>This is a master route.</h1>
-		<div id="master-outlet"></div>
-	`,
-	matchOutlet: '#master-outlet',
-	children: [{
-		path: 'users',
-		onActivate: () => {
-			console.log("The current URL is '/users'");
-		},
-		matchContent: `
-			<h2>This is where the users are.</h2>
-			<div id="users-outlet"></div>
-		`,
-		matchOutlet: "#users-outlet",
-		children: [{
-			path: ":id",
-			onActivate: ({ id }) => {
-				console.log(`The current URL is /users/${id}`)
-			},
-			matchContent: `
-				<h3>This is where the specific user is.</h3>
-			`
-		}]
-	}]
+  path: '/',
+  onActivate: () => {
+    console.log("The current URL is (or starts with) '/'");
+  },
+  content: `
+    <h1>This is a master route.</h1>
+    <div id="master-outlet"></div>
+  `,
+  outlet: '#master-outlet',
+  children: [{
+    path: 'users',
+    onActivate: () => {
+      console.log("The current URL is '/users'");
+    },
+    content: `
+      <h2>This is where the users are.</h2>
+      <div id="users-outlet"></div>
+    `,
+    outlet: "#users-outlet",
+    children: [{
+      path: ":id",
+      onActivate: ({ id }) => {
+        console.log(`The current URL is /users/${id}`)
+      },
+      content: `
+        <h3>This is where the specific user is.</h3>
+      `
+    }]
+  }]
 }])
 ```
 
