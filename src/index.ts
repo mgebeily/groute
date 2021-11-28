@@ -7,6 +7,11 @@ export type Route = {
   content?: string | HTMLElement;
 };
 
+export type Options = {
+  root?: HTMLElement,
+  basePath?: string,
+  controlNavigation: true,
+}
 export type Routes = Route[];
 export type Params = { [key:string]: string };
 export type RouteMatch = { route: Route, params: Params, leftToMatch?: string[] }
@@ -27,17 +32,11 @@ const routeMatched = (chunksToMatch: string[]) => (route: Route): RouteMatch | n
     }
   }
 
-  // TODO: Figure out how to get global params on activation
-  // if (!!route.canActivate && !route.canActivate(params)) {
-  //   // TODO: Async onActivate
-  //   return null;
-  // }
-
   return { route, params, leftToMatch: chunksToMatch };
 }
 
-const getMatchedRouteTree = (routes: Routes, basePath = ''): PathMatch[] => {
-  const currentPath = location.pathname.replace(new RegExp(`^${basePath}`), '')
+const getMatchedRouteTree = (routes: Routes, path = location.pathname, basePath = ''): PathMatch[] => {
+  const currentPath = path.replace(new RegExp(`^${basePath}`), '')
   const matchedPaths = routes.map(routeMatched(currentPath.split(/\/+/).filter((chunk) => chunk)))
     .filter((result) => !!result).map((route) => [route]);
 
@@ -47,21 +46,11 @@ const getMatchedRouteTree = (routes: Routes, basePath = ''): PathMatch[] => {
     const currentPath = matchedPaths.shift();
     const { leftToMatch, route } = currentPath[currentPath.length - 1];
 
-
-    // TODO: This declaratively. Unshift parent route at the top so you don't have to do it below?
-    if (!route.children) {
-      if (leftToMatch.length === 0) {
-        terminalRoutes.push(currentPath)
-      }
-      continue;
-    }
-
     // TODO: Does this work without the spread?
-    const matchedChildren = route.children.map(routeMatched([...leftToMatch])).filter((result) => !!result)
+    const matchedChildren = (route.children || []).map(routeMatched([...leftToMatch])).filter((result) => !!result)
       .map((route) => currentPath.concat([route]));
 
     matchedPaths.push(...matchedChildren)
-    terminalRoutes.push(...matchedChildren)
 
     if (leftToMatch.length === 0 && matchedChildren.length === 0) {
       terminalRoutes.push(currentPath)
@@ -71,8 +60,9 @@ const getMatchedRouteTree = (routes: Routes, basePath = ''): PathMatch[] => {
   return terminalRoutes;
 }
 
-const onNavigate = (routes: Routes, root = document.body, basePath = '') => {
-  const matchedRoutes = getMatchedRouteTree(routes, basePath);
+const onNavigate = (routes: Routes, path = location.pathname, root = document.body, basePath = '') => {
+  const matchedRoutes = getMatchedRouteTree(routes, path, basePath);
+
   // TODO: Gussy this up
   let matchedPath = null;
 
@@ -100,6 +90,7 @@ const onNavigate = (routes: Routes, root = document.body, basePath = '') => {
     }
 
     const content = route.content;
+
     if (content instanceof HTMLElement) {
       // TODO: Is this correct?
       currentOutlet.innerHTML = content.outerHTML;
@@ -114,11 +105,46 @@ const onNavigate = (routes: Routes, root = document.body, basePath = '') => {
   }
 }
 
-export const groute = (routes: Routes, root = document.body, basePath = '') => {
+export const navigate = (url?: string | URL) => {
+  const event = new CustomEvent('groute:navigated', {
+    detail: {
+      to: url
+    }
+  })
+  window.dispatchEvent(event)
+}
+
+export const interceptLinks = () => {
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' && !target.getAttribute("data-groute-skip")) {
+      e.preventDefault()
+      const to = target.getAttribute("href")
+      history.pushState({}, '', to);
+    }
+  })
+}
+
+export const groute = (routes: Routes, options: Options = { root: document.body, basePath: '', controlNavigation: true }) => {
+  const { root, basePath, controlNavigation } = options;
+  if (controlNavigation) {
+    const oldPushState = history.pushState;
+    history.pushState = (data, unused, url) => {
+      navigate(url);
+      return oldPushState.apply(history, [data, unused, url]);
+    };
+    interceptLinks()
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
-    onNavigate(routes, root, basePath);
+    onNavigate(routes, location.pathname, root, basePath);
   })
   window.addEventListener('popstate', () => {
-    onNavigate(routes, root, basePath)
+    // TODO: Is location pathname right here?
+    onNavigate(routes, location.pathname, root, basePath);
+  })
+  window.addEventListener('groute:navigated', (e) => {
+    const event = e as CustomEvent;
+    onNavigate(routes, event.detail.to, root, basePath);
   })
 }
