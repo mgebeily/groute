@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script src="/dist/main.js"></script>
+  </head>
+  <body>
+    <script>
+      groute([{
+        path: "",
+        outlet: "#e",
+        content: '<div id="e"></div>',
+        children: [{
+          path: "bad-times",
+          outlet: "#a",
+          content: '<div id="a"></div>',
+          children: [{
+            path: 'test',
+            outlet: '#tst',
+            content: '<a href="/test/toost">Testeroni</a><div id="tst"></div>',
+            children: [{
+              path: 'toost',
+              content: "WEE"
+            }]
+          }]
+        }]
+      }])
+    </script>
+  </body>
+</html>

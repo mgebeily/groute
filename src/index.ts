@@ -18,21 +18,24 @@ export type RouteMatch = { route: Route, params: Params, leftToMatch?: string[] 
 export type PathMatch = RouteMatch[];
 
 const routeMatched = (chunksToMatch: string[]) => (route: Route): RouteMatch | null => {
+  const leftToMatch = [...chunksToMatch];
   const chunks = route.path.split(/\/+/).filter((chunk) => chunk);
   const params: any = {};
 
   for(let x = 0; x < chunks.length; x++) {
-    const here = chunksToMatch.shift();
+    const here = leftToMatch.shift();
     const routeHere = chunks[x];
 
     if (routeHere.startsWith(":")) {
       params[routeHere.substring(1)] = here;
+    // } else if (routeHere === "*") {
+    //   return { route, params, leftToMatch: [] };
     } else if (routeHere !== here) {
       return null;
     }
   }
 
-  return { route, params, leftToMatch: chunksToMatch };
+  return { route, params, leftToMatch };
 }
 
 const getMatchedRouteTree = (routes: Routes, path = location.pathname, basePath = ''): PathMatch[] => {
@@ -68,7 +71,7 @@ const onNavigate = (routes: Routes, path = location.pathname, root = document.bo
 
   for(let x = 0; x < matchedRoutes.length; x++) {
     const path = matchedRoutes[x];
-    const params = path.reduce((previous, current) => ({ ...previous, ...current }), {})
+    const params = path.reduce(({ params: previousParams }, { params: nextParams }) => ({ ...previousParams, ...nextParams }), {} as any)
 
     if (path.every(({ route: { canActivate }}) => !canActivate || canActivate(params))) {
       matchedPath = path.map(({ leftToMatch, ...route }) => ({ ...route, params }));
